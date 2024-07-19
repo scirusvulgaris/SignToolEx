@@ -31,12 +31,6 @@ jobs:
     - name: Build solution
       run: msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} ${{ env.SOLUTION_FILE_PATH }}
 
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: build-artifacts
-        path: ${{ env.OUTPUT_DIR }}
-
   release:
     needs: build
     runs-on: ubuntu-latest
@@ -55,15 +49,19 @@ jobs:
         release_name: Release ${{ github.run_number }}
         draft: false
         prerelease: false
-      continue-on-error: true  # Continue even if this step fails
 
-    - name: Upload Release Asset (Executable)
-      if: success()  # Only run if create_release step succeeds
+    - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ env.OUTPUT_DIR }}/your_executable.exe  # Update this path to your actual executable file
+        asset_path: ${{ env.OUTPUT_DIR }}/GDRVLoader.exe  # Adjust this path as needed
         asset_name: program-${{ runner.os }}.exe
         asset_content_type: application/octet-stream
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: ${{ env.OUTPUT_DIR }}
