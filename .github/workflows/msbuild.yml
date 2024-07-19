@@ -1,37 +1,53 @@
-name: Release Workflow
+name: Build and Release
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "main" ]
 
 env:
   SOLUTION_FILE_PATH: .
   BUILD_CONFIGURATION: Release
-  OUTPUT_DIR: D:\a\GDRVLoader\GDRVLoader\x64\Release  # Adjust this to your actual output directory
+  OUTPUT_DIR: path/to/output/directory  # Adjust this path as needed
+
+permissions:
+  contents: write  # Ensure the GITHUB_TOKEN has write permissions
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    - name: Add MSBuild to PATH
+    - name: Set up MSBuild
       uses: microsoft/setup-msbuild@v2
 
     - name: Restore NuGet packages
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+      run: nuget restore ${{ env.SOLUTION_FILE_PATH }}
 
-    - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
+    - name: Build solution
+      run: msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} ${{ env.SOLUTION_FILE_PATH }}
 
-    - name: Create Release
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-artifacts
+        path: ${{ env.OUTPUT_DIR }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Create GitHub Release
       id: create_release
-      uses: ncipollo/release-action@v1
+      uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -39,19 +55,19 @@ jobs:
         release_name: Release ${{ github.run_number }}
         draft: false
         prerelease: false
+      continue-on-error: true  # Continue even if this step fails
+
+    - name: Debug: Log create_release output
+      if: failure()
+      run: echo "Create Release failed. Debug info: ${{ steps.create_release.outputs }}"
 
     - name: Upload Release Asset (Executable)
+      if: success()  # Only run if create_release step succeeds
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{env.OUTPUT_DIR}}\GDRVLoader.exe  # Update this path to your actual executable file
+        asset_path: ${{ env.OUTPUT_DIR }}/your_executable.exe  # Update this path to your actual executable file
         asset_name: program-${{ runner.os }}.exe
         asset_content_type: application/octet-stream
-
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-artifacts
-        path: ${{env.OUTPUT_DIR}}
