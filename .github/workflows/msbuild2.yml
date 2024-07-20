@@ -9,7 +9,7 @@ on:
 env:
   SOLUTION_FILE_PATH: .
   BUILD_CONFIGURATION: Release
-  OUTPUT_DIR: D:\a\GDRVLoader\GDRVLoader\x64\Release  # Adjust this to your actual output directory
+  OUTPUT_DIR:  ${{env.OUTPUT_DIR}}  
 
 jobs:
   build:
