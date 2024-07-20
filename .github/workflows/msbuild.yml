@@ -39,7 +39,6 @@ jobs:
         choco install vcredist140
         choco install vcredist2015
         choco install vcredist2017
-        choco install vcredist2019
 
     - name: Restore NuGet packages
       working-directory: ${{env.GITHUB_WORKSPACE}}
