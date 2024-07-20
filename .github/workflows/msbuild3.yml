@@ -60,7 +60,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{env.OUTPUT_DIR}}\GDRVLoader.exe  # Update this path to your actual executable file
+        asset_path: ${{env.OUTPUT_DIR}}\SignToolEx.exe  # Update this path to your actual executable file
         asset_name: program-${{ runner.os }}.exe
         asset_content_type: application/octet-stream
 
